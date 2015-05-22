@@ -1,6 +1,6 @@
 ;; Copyright (C) 2012, Eduardo Julián. All rights reserved.
 ;;
-;; The use and distribution terms for this software are covered by the 
+;; The use and distribution terms for this software are covered by the
 ;; Eclipse Public License 1.0
 ;; (http://opensource.org/licenses/eclipse-1.0.php) which can be found
 ;; in the file epl-v10.html at the root of this distribution.
@@ -10,9 +10,12 @@
 ;;
 ;; You must not remove this notice, or any other, from this software.
 
-(ns ^{:author "Eduardo Julián <eduardoejp@gmail.com>",
-      :doc "Clojure implementations of the ScriptEngine and ScriptEngineFactory interfaces."}
-     clj-jsr223
+
+
+(ns
+  ^{:author "Eduardo Julián <eduardoejp@gmail.com>",
+    :doc "Clojure implementations of the ScriptEngine and ScriptEngineFactory interfaces."}
+  clj-jsr223
   (:import (javax.script Bindings ScriptContext)))
 
 (deftype ClojureScriptEngine [factory context]
@@ -24,18 +27,22 @@
   (getBindings [_ ctx] (.getBindings @context ctx))
   (setBindings [_ binds ctx] (.setBindings @context binds ctx))
   (put [self k v] (.put (.getBindings self) k v))
-  (eval ^Object [self ^String script] (eval (read-string script)))
+  (eval ^Object [self ^String script] (.eval self script @context))
   (eval ^Object [self ^String script ^Bindings binds]
     (doseq [[k v] (->> binds seq (apply conj {}))]
       (let [parts (.split k "/")
             [ns name] (if (= 2 (count parts)) (map symbol parts) ['user (symbol (first parts))])]
         (create-ns ns)
         (intern ns name v)))
-    (.eval self script))
-  (eval ^Object [self ^String script ^ScriptContext ctx] (.eval self script (.getBindings ctx)))
+    (create-ns 'user)
+    (binding [*ns* (the-ns 'user)]
+      (eval (read-string (clojure.string/join (list "(do " script ")"))))
+      )
+    )
+  (eval ^Object [self ^String script ^ScriptContext ctx] (.eval self script (.getBindings ctx javax.script.ScriptContext/ENGINE_SCOPE)))
   (eval ^Object [self ^java.io.Reader script] (.eval self (slurp script)))
   (eval ^Object [self ^java.io.Reader script ^Bindings binds] (.eval self (slurp script) binds))
-  (eval ^Object [self ^java.io.Reader script ^ScriptContext ctx] (.eval self (slurp script) (.getBindings ctx)))
+  (eval ^Object [self ^java.io.Reader script ^ScriptContext ctx] (.eval self (slurp script) (.getBindings ctx javax.script.ScriptContext/ENGINE_SCOPE)))
   )
 
 (deftype ClojureScriptEngineFactory []
