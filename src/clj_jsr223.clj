@@ -30,7 +30,7 @@
   (put [self k v] (.put (.getBindings self) k v))
   (eval ^Object [self ^String script] (.eval self script @context))
   (eval ^Object [_ ^String script ^Bindings binds]
-    (doseq [[k v] (->> binds seq (apply conj {}))]
+    (doseq [[k v] (seq binds)]
       (let [parts (.split k "/")
             [ns name] (if (= 2 (count parts)) (map symbol parts) ['user (symbol (first parts))])]
         (create-ns ns)
