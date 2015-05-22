@@ -5,4 +5,5 @@
                       :url "http://www.eclipse.org/legal/epl-v10.html"
                       :distribution :repo
                       :comments "same as Clojure"}
-            :dependencies [[org.clojure/clojure "1.6.0"]])
+            :dependencies [[org.clojure/clojure "1.6.0"]]
+            :aot [clj-jsr223])
