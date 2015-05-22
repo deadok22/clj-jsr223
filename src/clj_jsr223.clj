@@ -29,14 +29,14 @@
   (setBindings [_ binds ctx] (.setBindings @context binds ctx))
   (put [self k v] (.put (.getBindings self) k v))
   (eval ^Object [self ^String script] (.eval self script @context))
-  (eval ^Object [_ ^String script ^Bindings binds]
+  (eval ^Object [self ^String script ^Bindings binds]
     (doseq [[k v] (seq binds)]
       (let [parts (.split k "/")
             [ns name] (if (= 2 (count parts)) (map symbol parts) ['user (symbol (first parts))])]
         (create-ns ns)
         (intern ns name v)))
     (create-ns 'user)
-    (binding [*ns* (the-ns 'user)]
+    (binding [*ns* (the-ns 'user) *out* (.getWriter (.getContext self)) *err* (.getErrorWriter (.getContext self))]
       (eval (read-string (clojure.string/join (list "(do " script ")"))))
       )
     )
