@@ -19,16 +19,16 @@
   (:import (javax.script Bindings ScriptContext ScriptEngine SimpleBindings ScriptEngineFactory SimpleScriptContext)
            (java.io Reader)))
 
-(deftype ClojureScriptEngine [factory context]
+(deftype ClojureScriptEngine [factory ^{:unsynchronized-mutable true} context]
   ScriptEngine
   (getFactory [_] factory)
-  (getContext [_] @context)
-  (setContext [_ ctx] (reset! context ctx))
+  (getContext [_] context)
+  (setContext [_ ctx] (set! context ctx))
   (createBindings [_] (SimpleBindings.))
-  (getBindings [_ ctx] (.getBindings @context ctx))
-  (setBindings [_ binds ctx] (.setBindings @context binds ctx))
+  (getBindings [_ ctx] (.getBindings context ctx))
+  (setBindings [_ binds ctx] (.setBindings context binds ctx))
   (put [self k v] (.put (.getBindings self) k v))
-  (eval ^Object [self ^String script] (.eval self script @context))
+  (eval ^Object [self ^String script] (.eval self script context))
   (eval ^Object [self ^String script ^Bindings binds]
     (doseq [[k v] (seq binds)]
       (let [parts (.split k "/")
@@ -56,7 +56,7 @@
   (getExtensions [_] ["clj"])
   (getMimeTypes [_] ["application/clojure" "text/clojure"])
   (getNames [_] ["clojure" "Clojure"])
-  (getScriptEngine [self] (ClojureScriptEngine. self (atom (SimpleScriptContext.))))
+  (getScriptEngine [self] (ClojureScriptEngine. self (SimpleScriptContext.)))
   (getOutputStatement [_ to-print] (str "(println \"" to-print "\")"))
   (getMethodCallSyntax [_ obj meth args] (str "(." meth " " obj " " (apply str (interpose " " (map pr-str args))) ")"))
   (getProgram [_ forms] (apply str (interleave forms (repeat \newline)))))
