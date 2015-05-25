@@ -27,7 +27,8 @@
   (createBindings [_] (SimpleBindings.))
   (getBindings [_ ctx] (.getBindings context ctx))
   (setBindings [_ binds ctx] (.setBindings context binds ctx))
-  (put [self k v] (.put (.getBindings self) k v))
+  (put [self k v] (.put (.getBindings self ScriptContext/ENGINE_SCOPE) k v))
+  (get [self k] (.get (.getBindings self ScriptContext/ENGINE_SCOPE) k))
   (eval ^Object [self ^String script] (.eval self script context))
   (eval ^Object [self ^String script ^Bindings binds]
     (doseq [[k v] (seq binds)]
